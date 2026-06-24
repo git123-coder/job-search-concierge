@@ -16,7 +16,8 @@ async def main():
     print("Running end-to-end test...")
     requests = [
         "I applied to Microsoft for SWE today",
-        "How many applications have I submitted?"
+        "How many applications have I submitted?",
+        "What should I follow up on?"
     ]
     
     for user_input in requests:

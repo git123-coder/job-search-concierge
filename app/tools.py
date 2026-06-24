@@ -1,5 +1,6 @@
 import csv
 import os
+import datetime
 from google.adk.tools import ToolContext
 from .security import validate_application, audit_log
 
@@ -110,3 +111,30 @@ def calculate_analytics(tool_context: ToolContext) -> dict:
     
     audit_log(agent_name, tool_name, "SUCCESS", f"Calculated analytics on {total} apps.")
     return {"status": "success", "data": metrics}
+
+def find_stale_applications(days: int, tool_context: ToolContext) -> dict:
+    """Finds applications that are stale (status is 'Applied' and older than the given number of days).
+    
+    Args:
+        days: The number of days after which an application is considered stale.
+    Returns:
+        A dict containing the list of stale applications.
+    """
+    agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
+    tool_name = "find_stale_applications"
+    
+    apps_resp = get_applications(tool_context)
+    if apps_resp.get("status") == "error":
+        audit_log(agent_name, tool_name, "FAILURE", "Failed to get applications.")
+        return apps_resp
+        
+    now = datetime.datetime.now()
+    stale_apps = []
+    for row in apps_resp.get("data", []):
+        if row.get("status") == "Applied" and row.get("date_applied"):
+            date_app = datetime.datetime.strptime(row["date_applied"], "%Y-%m-%d")
+            if (now - date_app).days > days:
+                stale_apps.append(row)
+                
+    audit_log(agent_name, tool_name, "SUCCESS", f"Found {len(stale_apps)} stale applications.")
+    return {"status": "success", "data": stale_apps}

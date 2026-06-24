@@ -1,27 +1,49 @@
+from datetime import datetime
 from google.adk.agents import Agent
-from .tools import add_application, get_applications, calculate_analytics
+from .tools import add_application, get_applications, calculate_analytics, find_stale_applications
 
 logger_agent = Agent(
     name="logger_agent",
-    model="gemini-2.5-flash",
-    instruction="You log applications. Extract company, role, status, and date_applied, then call add_application.",
+    model="gemini-flash-lite-latest",
+    instruction=f"""
+                You log job applications. 
+                Today's date is {datetime.now().strftime('%Y-%m-%d')}.
+                Extract:
+                - company
+                - role
+                - status
+                - date_applied from the user's message.
+
+                Rules:
+                - If the user says 'today' or doesn't specify a date, use today's date above. 
+                - Default status to 'Applied' if not mentioned. 
+                - Always call add_application immediately with these fields. 
+                - Never ask the user a question.""",
     description="Logs job applications to the database. Call this agent when the user wants to log an application.",
     tools=[add_application],
 )
 
 insights_agent = Agent(
     name="insights_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-lite-latest",
     instruction="You answer questions about application counts and response rates. Use the get_applications and calculate_analytics tools to gather data to answer the user's questions.",
     description="Provides analytics and insights about job applications.",
     tools=[get_applications, calculate_analytics],
 )
 
+strategy_agent = Agent(
+    name="strategy_agent",
+    model="gemini-flash-lite-latest",
+    instruction="When asked what to follow up on or what to do next, use the get_applications, calculate_analytics, and find_stale_applications tools to identify stale applications and recommend specific next actions.",
+    description="Provides strategy and recommends next actions for job applications.",
+    tools=[get_applications, calculate_analytics, find_stale_applications],
+)
+
 supervisor_agent = Agent(
     name="supervisor_agent",
-    model="gemini-2.5-flash",
-    instruction="You are the supervisor. If the user wants to log a job application, delegate to the logger_agent. If the user asks for application counts, analytics, or how they are doing, delegate to the insights_agent. Do not attempt to process the request yourself.",
-    sub_agents=[logger_agent, insights_agent],
+    model="gemini-flash-lite-latest",
+    instruction="You are the supervisor. If the user wants to log a job application, delegate to the logger_agent. If the user asks for application counts, analytics, or how they are doing, delegate to the insights_agent. If the user asks what to follow up on or what to do next, delegate to the strategy_agent. Do not attempt to process the request yourself.",
+    sub_agents=[logger_agent, insights_agent, strategy_agent],
 )
 
 root_agent = supervisor_agent
