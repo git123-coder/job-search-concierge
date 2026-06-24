@@ -14,20 +14,25 @@ async def main():
     )
     
     print("Running end-to-end test...")
-    user_input = "I applied to Google for SWE today"
+    requests = [
+        "I applied to Microsoft for SWE today",
+        "How many applications have I submitted?"
+    ]
     
-    async for event in runner.run_async(
-        user_id="test_user",
-        session_id=session.id,
-        new_message=types.Content(role="user", parts=[types.Part.from_text(text=user_input)]),
-    ):
-        if event.content:
-            text = ""
-            for part in event.content.parts:
-                if getattr(part, 'text', None):
-                    text += part.text
-            if text:
-                print(f"Agent: {text}")
+    for user_input in requests:
+        print(f"\nUser: {user_input}")
+        async for event in runner.run_async(
+            user_id="test_user",
+            session_id=session.id,
+            new_message=types.Content(role="user", parts=[types.Part.from_text(text=user_input)]),
+        ):
+            if event.content:
+                text = ""
+                for part in event.content.parts:
+                    if getattr(part, 'text', None):
+                        text += part.text
+                if text:
+                    print(f"Agent: {text}")
             
     print("\n--- applications.csv ---")
     try:
