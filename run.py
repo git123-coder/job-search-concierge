@@ -1,3 +1,7 @@
+import warnings
+warnings.filterwarnings( "ignore", message=".*JSON_SCHEMA_FOR_FUNC_DECL.*", 
+category=UserWarning, module="google.adk.tools.function_tool" )
+
 import asyncio
 from google.adk.apps import App
 from google.adk.runners import InMemoryRunner
@@ -17,7 +21,8 @@ async def main():
     requests = [
         "I applied to Microsoft for SWE today",
         "How many applications have I submitted?",
-        "What should I follow up on?"
+        "What should I follow up on?",
+        "How is my job search going?"
     ]
     
     for user_input in requests:

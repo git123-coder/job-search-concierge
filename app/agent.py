@@ -1,6 +1,7 @@
 from datetime import datetime
 from google.adk.agents import Agent
 from .tools import add_application, get_applications, calculate_analytics, find_stale_applications
+from .skills import analyze_job_search
 
 logger_agent = Agent(
     name="logger_agent",
@@ -26,17 +27,17 @@ logger_agent = Agent(
 insights_agent = Agent(
     name="insights_agent",
     model="gemini-flash-lite-latest",
-    instruction="You answer questions about application counts and response rates. Use the get_applications and calculate_analytics tools to gather data to answer the user's questions.",
+    instruction="You answer questions about application counts and response rates. Use the get_applications and calculate_analytics tools to gather data to answer the user's questions. When answering broader progress questions such as 'How is my job search going?' or 'Give me an overview of my job search.', use the analyze_job_search tool.",
     description="Provides analytics and insights about job applications.",
-    tools=[get_applications, calculate_analytics],
+    tools=[get_applications, calculate_analytics, analyze_job_search],
 )
 
 strategy_agent = Agent(
     name="strategy_agent",
     model="gemini-flash-lite-latest",
-    instruction="When asked what to follow up on or what to do next, use the get_applications, calculate_analytics, and find_stale_applications tools to identify stale applications and recommend specific next actions.",
+    instruction="When asked what to follow up on or what to do next, use the get_applications, calculate_analytics, and find_stale_applications tools to identify stale applications and recommend specific next actions. Allow it to use analyze_job_search when generating recommendations.",
     description="Provides strategy and recommends next actions for job applications.",
-    tools=[get_applications, calculate_analytics, find_stale_applications],
+    tools=[get_applications, calculate_analytics, find_stale_applications, analyze_job_search],
 )
 
 supervisor_agent = Agent(
