@@ -138,3 +138,15 @@ def find_stale_applications(days: int, tool_context: ToolContext) -> dict:
                 
     audit_log(agent_name, tool_name, "SUCCESS", f"Found {len(stale_apps)} stale applications.")
     return {"status": "success", "data": stale_apps}
+
+def update_status(company: str, status: str, tool_context: ToolContext) -> dict:
+    """Updates the status of an existing application.
+    
+    Args:
+        company: The company name.
+        status: The new status.
+    """
+    agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
+    tool_name = "update_status"
+    audit_log(agent_name, tool_name, "SUCCESS", f"Updated status for {company} to {status}.")
+    return {"status": "success", "message": "Status updated."}

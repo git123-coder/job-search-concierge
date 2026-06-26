@@ -1,6 +1,6 @@
 from datetime import datetime
 from google.adk.agents import Agent
-from .tools import add_application, get_applications, calculate_analytics, find_stale_applications
+from .tools import add_application, get_applications, calculate_analytics, find_stale_applications, update_status
 from .skills import analyze_job_search
 
 logger_agent = Agent(
@@ -21,7 +21,7 @@ logger_agent = Agent(
                 - Always call add_application immediately with these fields. 
                 - Never ask the user a question.""",
     description="Logs job applications to the database. Call this agent when the user wants to log an application.",
-    tools=[add_application],
+    tools=[add_application, update_status],
 )
 
 insights_agent = Agent(
