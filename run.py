@@ -22,7 +22,12 @@ async def main():
         "I applied to Microsoft for SWE today",
         "How many applications have I submitted?",
         "What should I follow up on?",
-        "How is my job search going?"
+        "How is my job search going?",
+        "Applied to Microsoft for SWE today",
+        "Applied today",
+        "Microsoft SWE",
+        "Interview at Google",
+        "Hi"
     ]
     
     for user_input in requests:

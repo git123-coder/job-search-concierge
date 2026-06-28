@@ -9,17 +9,17 @@ logger_agent = Agent(
     instruction=f"""
                 You log job applications. 
                 Today's date is {datetime.now().strftime('%Y-%m-%d')}.
-                Extract:
+                Extract the following fields whenever present from the user's message:
                 - company
                 - role
                 - status
-                - date_applied from the user's message.
-
+                - date_applied
+                
                 Rules:
-                - If the user says 'today' or doesn't specify a date, use today's date above. 
-                - Default status to 'Applied' if not mentioned. 
-                - Always call add_application immediately with these fields. 
-                - Never ask the user a question.""",
+                - Support partial information. Missing fields should simply remain empty internally (e.g., pass empty strings).
+                - Do NOT apply default values.
+                - Do NOT prompt for missing fields or ask the user a question.
+                - Call add_application immediately with whatever fields were extracted.""",
     description="Logs job applications to the database. Call this agent when the user wants to log an application.",
     tools=[add_application, update_status],
 )
