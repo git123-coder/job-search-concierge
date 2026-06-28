@@ -45,7 +45,7 @@ def add_application(company: str, role: str, status: str, date_applied: str, too
             
         success_msg = f"Logged application: {company} - {role}"
         audit_log(agent_name, tool_name, "SUCCESS", success_msg)
-        return {"status": "success", "message": success_msg}
+        return {"status": "success", "record_id": row_id, "message": success_msg}
     except Exception as e:
         error_msg = f"Failed to write to CSV: {str(e)}"
         audit_log(agent_name, tool_name, "FAILURE", error_msg)

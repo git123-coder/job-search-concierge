@@ -15,11 +15,19 @@ logger_agent = Agent(
                 - status
                 - date_applied
                 
-                Rules:
-                - Support partial information. Missing fields should simply remain empty internally (e.g., pass empty strings).
-                - Do NOT apply default values.
-                - Do NOT prompt for missing fields or ask the user a question.
-                - Call add_application immediately with whatever fields were extracted.""",
+                Rules for when NO logging fields are detected (e.g., 'Hi'):
+                - Do not create a record.
+                - Respond conversationally and clearly communicate: "I can help log your application. Just provide any one of: Status, Company, Role, Date (optional)".
+                
+                Rules for when AT LEAST ONE logging field is detected (EVEN if it is just a Status like 'Applied'):
+                - Immediately create a record using add_application.
+                - Preserve extraction metadata: Before applying any defaults, track exactly which fields were extracted from the user and which were missing.
+                - Fill missing fields with defaults BEFORE calling add_application (Status -> Applied, Company -> TBD, Role -> TBD, Date -> Today's date).
+                - After the record is created, inform the user EXACTLY which values were assumed automatically (based on what was actually missing from their original input, not by comparing final values to defaults).
+                - Do NOT report a field as assumed if the user provided it (even if the provided value happens to match the default, such as 'Applied' or 'today').
+                - Remind them which information is still incomplete based solely on the originally missing fields.
+                - Tell the user they can update the record now or later using the returned Record ID (use the exact record_id returned by add_application).
+                - Do not update the record automatically from subsequent messages.""",
     description="Logs job applications to the database. Call this agent when the user wants to log an application.",
     tools=[add_application, update_status],
 )
