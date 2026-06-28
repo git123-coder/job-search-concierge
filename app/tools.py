@@ -139,14 +139,51 @@ def find_stale_applications(days: int, tool_context: ToolContext) -> dict:
     audit_log(agent_name, tool_name, "SUCCESS", f"Found {len(stale_apps)} stale applications.")
     return {"status": "success", "data": stale_apps}
 
-def update_status(company: str, status: str, tool_context: ToolContext) -> dict:
-    """Updates the status of an existing application.
+def update_status(id: int, company: str, role: str, status: str, date_applied: str, tool_context: ToolContext) -> dict:
+    """Updates an existing application by ID.
     
     Args:
-        company: The company name.
-        status: The new status.
+        id: The Record ID to update.
+        company: The company name (optional, only if updating).
+        role: The role (optional, only if updating).
+        status: The new status (optional, only if updating).
+        date_applied: The date applied (optional, only if updating).
     """
     agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
     tool_name = "update_status"
-    audit_log(agent_name, tool_name, "SUCCESS", f"Updated status for {company} to {status}.")
-    return {"status": "success", "message": "Status updated."}
+    
+    try:
+        if not os.path.exists(CSV_FILE):
+            return {"status": "error", "message": "No records found."}
+            
+        data = []
+        updated = False
+        updated_row = None
+        
+        with open(CSV_FILE, "r") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if str(row["id"]) == str(id):
+                    if company: row["company"] = company
+                    if role: row["role"] = role
+                    if status: row["status"] = status
+                    if date_applied: row["date_applied"] = date_applied
+                    row["last_updated"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    updated_row = row
+                    updated = True
+                data.append(row)
+                
+        if not updated:
+            return {"status": "error", "message": f"Record #{id} not found."}
+            
+        with open(CSV_FILE, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+            writer.writeheader()
+            writer.writerows(data)
+            
+        audit_log(agent_name, tool_name, "SUCCESS", f"Updated record #{id}.")
+        return {"status": "success", "message": "Record updated.", "record": updated_row}
+    except Exception as e:
+        error_msg = f"Failed to update CSV: {str(e)}"
+        audit_log(agent_name, tool_name, "FAILURE", error_msg)
+        return {"status": "error", "message": error_msg}

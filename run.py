@@ -19,6 +19,19 @@ async def main():
     
     print("Running end-to-end test...")
     requests = [
+        "Update Record #23 Status Interview",
+        "Update Record #23 Company Google Role SDE Status Interview",
+        "Update Record #23",
+        "Update Record #24",
+        "Role: SWE",
+        "Update Record #999",
+        "Update Record #23",
+        "Company: Microsoft",
+        "SWE",
+        "Status: Interview",
+        "Cancel",
+        "Update Record #999",
+        "Applied to Netflix for backend dev today",
         "Applied",
         "Microsoft",
         "Microsoft SWE",
@@ -28,7 +41,6 @@ async def main():
         "How many applications have I submitted?",
         "What should I follow up on?",
         "How is my job search going?"
-
     ]
     
     for user_input in requests:

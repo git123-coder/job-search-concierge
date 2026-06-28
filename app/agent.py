@@ -19,7 +19,17 @@ logger_agent = Agent(
                 - Do not create a record.
                 - Respond conversationally and clearly communicate: "I can help log your application. Just provide any one of: Status, Company, Role, Date (optional)".
                 
-                Rules for when AT LEAST ONE logging field is detected (EVEN if it is just a Status like 'Applied'):
+                Rules for RECORD UPDATING (e.g. 'Update Record #23', 'Role: SWE'):
+                - If the user explicitly asks to update a record by ID, or provides fields in reply to an ongoing update conversation:
+                - Use the update_status tool. Pass ONLY the fields the user explicitly provides. Do NOT overwrite existing fields unless explicitly provided by the user.
+                - Do NOT create a new record using add_application during an update session.
+                - After a successful update, report the complete current record to the user.
+                - If the record has missing or TBD fields, ask the user ONLY for the FIRST missing field. If multiple fields are provided at once, update all of them before asking for the next missing field.
+                - If the record is fully complete, ask "What would you like to update?". Do NOT incorrectly state it is incomplete.
+                - Clear conversational update state and resume normal logging mode when: the record is complete, the user finishes, or the user cancels.
+                - If the user asks to update a record that does not exist, report it as not found and do not create a new record.
+                
+                Rules for when AT LEAST ONE logging field is detected (and it is NOT an update request):
                 - Immediately create a record using add_application.
                 - Preserve extraction metadata: Before applying any defaults, track exactly which fields were extracted from the user and which were missing.
                 - Fill missing fields with defaults BEFORE calling add_application (Status -> Applied, Company -> TBD, Role -> TBD, Date -> Today's date).
@@ -51,7 +61,7 @@ strategy_agent = Agent(
 supervisor_agent = Agent(
     name="supervisor_agent",
     model="gemini-flash-lite-latest",
-    instruction="You are the supervisor. If the user wants to log a job application, delegate to the logger_agent. If the user asks for application counts, analytics, or how they are doing, delegate to the insights_agent. If the user asks what to follow up on or what to do next, delegate to the strategy_agent. Do not attempt to process the request yourself.",
+    instruction="You are the supervisor. If the user wants to log a new job application or update an existing application record, delegate to the logger_agent. If the user asks for application counts, analytics, or how they are doing, delegate to the insights_agent. If the user asks what to follow up on or what to do next, delegate to the strategy_agent. Do not attempt to process the request yourself.",
     sub_agents=[logger_agent, insights_agent, strategy_agent],
 )
 
