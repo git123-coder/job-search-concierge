@@ -1,21 +1,13 @@
+import asyncio
 import warnings
 warnings.filterwarnings( "ignore", message=".*JSON_SCHEMA_FOR_FUNC_DECL.*", 
 category=UserWarning, module="google.adk.tools.function_tool" )
 
-import asyncio
-from google.adk.apps import App
-from google.adk.runners import InMemoryRunner
-from google.genai import types
-
-from app.agent import root_agent
+from app.engine import JobSearchEngine
 
 async def main():
-    app = App(name="job-search-concierge", root_agent=root_agent)
-    runner = InMemoryRunner(app=app)
-    
-    session = await runner.session_service.create_session(
-        app_name="job-search-concierge", user_id="test_user"
-    )
+    engine = JobSearchEngine()
+    session = await engine.create_session(user_id="test_user")
     
     print("Running end-to-end test...")
     requests = [
@@ -45,18 +37,9 @@ async def main():
     
     for user_input in requests:
         print(f"\nUser: {user_input}")
-        async for event in runner.run_async(
-            user_id="test_user",
-            session_id=session.id,
-            new_message=types.Content(role="user", parts=[types.Part.from_text(text=user_input)]),
-        ):
-            if event.content:
-                text = ""
-                for part in event.content.parts:
-                    if getattr(part, 'text', None):
-                        text += part.text
-                if text:
-                    print(f"Agent: {text}")
+        response = await engine.process_message(user_input, session.id, user_id="test_user")
+        if response:
+            print(f"Agent: {response}")
             
     print("\n--- applications.csv ---")
     try:
