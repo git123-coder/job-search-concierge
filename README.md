@@ -99,14 +99,24 @@ Supervisor Agent
 # Project Structure
 
 ```text
-project/
-├── app.py
-├── run.py
-├── regression_tests.py
-├── agents/
-├── applications.csv
-├── audit.log
-└── README.md
+
+job-search-concierge
+ │
+ ├── app
+ │     │
+ │     ├── agent.py
+ │     ├── engine.py
+ │     ├── security.py			
+ │     ├── skills.py
+ │     └── tools.py
+ │
+ ├── app.py
+ ├── applications.csv
+ ├── audit.log
+ ├── README.md
+ ├── regression_tests.py
+ └── requirements.txt
+ 
 ```
 
 ---
