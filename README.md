@@ -180,36 +180,76 @@ Used by:
 
 # Setup Instructions
 
-## Clone the repository
+## Setup Instructions
+
+### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
-cd <repository-folder>
+cd job-search-concierge
 ```
 
-## Install dependencies
+### 2. Create a virtual environment
+
+```bash
+python3 -m venv .venv
+```
+
+Activate it:
+
+**macOS / Linux**
+
+```bash
+source .venv/bin/activate
+```
+
+**Windows**
+
+```bash
+.venv\Scripts\activate
+```
+
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-(or install the required packages manually if a requirements file is not provided)
+### 4. Get a Gemini API Key
 
----
+1. Sign in to Google AI Studio.
+2. Create a new API key.
+3. Copy the generated key.
 
-# Usage
+### 5. Configure the API Key
 
-## Interactive Mode
+Create a `.env` file in the project root:
 
-Launch the Streamlit interface:
+```text
+GEMINI_API_KEY=your-api-key-here
+```
+
+Alternatively, set it as an environment variable before running the project:
+
+**macOS / Linux**
+
+```bash
+export GEMINI_API_KEY="your-api-key-here"
+```
+
+**Windows (PowerShell)**
+
+```powershell
+$env:GEMINI_API_KEY="your-api-key-here"
+```
+
+### 6. Launch the application
 
 ```bash
 streamlit run app.py
 ```
 
-## Regression Testing
-
-Run the complete regression suite:
+### 7. Run the regression test suite (optional)
 
 ```bash
 python3 regression_tests.py
