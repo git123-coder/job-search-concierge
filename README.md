@@ -4,6 +4,9 @@ A multi-agent AI job search assistant built with Google ADK that helps users log
 
 ---
 
+# Demo
+[![Watch the Demo](images/Github_Thumbnail2.png)](https://www.youtube.com/watch?v=4huJWB_kBdE)
+
 # Problem Statement
 
 Managing a job search across multiple companies quickly becomes difficult. Applicants often forget where they applied, which applications require follow-up, and how their overall job search is progressing.
