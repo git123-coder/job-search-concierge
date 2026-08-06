@@ -2,6 +2,8 @@
 
 A multi-agent AI job search assistant built with Google ADK that helps users log job applications, update records, analyze their job search, and receive strategy recommendations using natural language.
 
+
+> **Project Context:** Built as the capstone project for the **Google × Kaggle: 5-Day AI Agents – Intensive Vibe Coding Course**.
 ---
 
 # Demo
