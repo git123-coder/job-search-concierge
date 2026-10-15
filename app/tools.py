@@ -1,11 +1,6 @@
-import csv
-import os
 import datetime
 from google.adk.tools import ToolContext
 from .security import validate_application, audit_log
-
-CSV_FILE = "applications.csv"
-CSV_HEADERS = ["id", "company", "role", "status", "date_applied", "last_updated"]
 
 def add_application(company: str, role: str, status: str, date_applied: str, tool_context: ToolContext) -> dict:
     """Logs a job application.
@@ -19,7 +14,7 @@ def add_application(company: str, role: str, status: str, date_applied: str, too
     Returns:
         A dict indicating success or error.
     """
-    agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
+    agent_name = tool_context.node.name if tool_context and getattr(tool_context, "node", None) else "UnknownAgent"
     tool_name = "add_application"
     
     error = validate_application(company, role, status, date_applied)
@@ -28,26 +23,26 @@ def add_application(company: str, role: str, status: str, date_applied: str, too
         return {"status": "error", "message": error}
         
     try:
-        file_exists = os.path.exists(CSV_FILE)
-        row_id = 1
+        apps = list(tool_context.state.get("applications", [])) if (tool_context and hasattr(tool_context, "state")) else []
+        row_id = max((int(app.get("id", 0)) for app in apps), default=0) + 1
         
-        if file_exists:
-            with open(CSV_FILE, "r") as f:
-                row_count = sum(1 for _ in f)
-                if row_count > 0:
-                    row_id = row_count
-                    
-        with open(CSV_FILE, "a", newline="") as f:
-            writer = csv.writer(f)
-            if not file_exists:
-                writer.writerow(CSV_HEADERS)
-            writer.writerow([row_id, company, role, status, date_applied, ""])
+        new_record = {
+            "id": row_id,
+            "company": company,
+            "role": role,
+            "status": status,
+            "date_applied": date_applied,
+            "last_updated": ""
+        }
+        
+        if tool_context and hasattr(tool_context, "state"):
+            tool_context.state["applications"] = apps + [new_record]
             
         success_msg = f"Logged application: {company} - {role}"
-        audit_log(agent_name, tool_name, "SUCCESS", success_msg)
+        audit_log(agent_name, tool_name, "SUCCESS")
         return {"status": "success", "record_id": row_id, "message": success_msg}
     except Exception as e:
-        error_msg = f"Failed to write to CSV: {str(e)}"
+        error_msg = f"Failed to log application: {str(e)}"
         audit_log(agent_name, tool_name, "FAILURE", error_msg)
         return {"status": "error", "message": error_msg}
 
@@ -57,24 +52,15 @@ def get_applications(tool_context: ToolContext) -> dict:
     Returns:
         A dict containing a list of application records.
     """
-    agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
+    agent_name = tool_context.node.name if tool_context and getattr(tool_context, "node", None) else "UnknownAgent"
     tool_name = "get_applications"
     
     try:
-        if not os.path.exists(CSV_FILE):
-            audit_log(agent_name, tool_name, "SUCCESS", "File does not exist, returned empty.")
-            return {"status": "success", "data": []}
-            
-        data = []
-        with open(CSV_FILE, "r") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                data.append(row)
-        
-        audit_log(agent_name, tool_name, "SUCCESS", f"Retrieved {len(data)} applications.")
-        return {"status": "success", "data": data}
+        apps = list(tool_context.state.get("applications", [])) if (tool_context and hasattr(tool_context, "state")) else []
+        audit_log(agent_name, tool_name, "SUCCESS")
+        return {"status": "success", "data": apps}
     except Exception as e:
-        error_msg = f"Failed to read CSV: {str(e)}"
+        error_msg = f"Failed to retrieve applications: {str(e)}"
         audit_log(agent_name, tool_name, "FAILURE", error_msg)
         return {"status": "error", "message": error_msg}
 
@@ -84,7 +70,7 @@ def calculate_analytics(tool_context: ToolContext) -> dict:
     Returns:
         A dict containing the calculated metrics.
     """
-    agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
+    agent_name = tool_context.node.name if tool_context and getattr(tool_context, "node", None) else "UnknownAgent"
     tool_name = "calculate_analytics"
     
     apps_resp = get_applications(tool_context)
@@ -109,7 +95,7 @@ def calculate_analytics(tool_context: ToolContext) -> dict:
         "response_rate": round(response_rate, 2)
     }
     
-    audit_log(agent_name, tool_name, "SUCCESS", f"Calculated analytics on {total} apps.")
+    audit_log(agent_name, tool_name, "SUCCESS")
     return {"status": "success", "data": metrics}
 
 def find_stale_applications(days: int, tool_context: ToolContext) -> dict:
@@ -120,7 +106,7 @@ def find_stale_applications(days: int, tool_context: ToolContext) -> dict:
     Returns:
         A dict containing the list of stale applications.
     """
-    agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
+    agent_name = tool_context.node.name if tool_context and getattr(tool_context, "node", None) else "UnknownAgent"
     tool_name = "find_stale_applications"
     
     apps_resp = get_applications(tool_context)
@@ -132,11 +118,14 @@ def find_stale_applications(days: int, tool_context: ToolContext) -> dict:
     stale_apps = []
     for row in apps_resp.get("data", []):
         if row.get("status") == "Applied" and row.get("date_applied"):
-            date_app = datetime.datetime.strptime(row["date_applied"], "%Y-%m-%d")
-            if (now - date_app).days > days:
-                stale_apps.append(row)
+            try:
+                date_app = datetime.datetime.strptime(row["date_applied"], "%Y-%m-%d")
+                if (now - date_app).days > days:
+                    stale_apps.append(row)
+            except ValueError:
+                continue
                 
-    audit_log(agent_name, tool_name, "SUCCESS", f"Found {len(stale_apps)} stale applications.")
+    audit_log(agent_name, tool_name, "SUCCESS")
     return {"status": "success", "data": stale_apps}
 
 def update_status(id: int, company: str, role: str, status: str, date_applied: str, tool_context: ToolContext) -> dict:
@@ -149,41 +138,40 @@ def update_status(id: int, company: str, role: str, status: str, date_applied: s
         status: The new status (optional, only if updating).
         date_applied: The date applied (optional, only if updating).
     """
-    agent_name = tool_context.node.name if tool_context and tool_context.node else "UnknownAgent"
+    agent_name = tool_context.node.name if tool_context and getattr(tool_context, "node", None) else "UnknownAgent"
     tool_name = "update_status"
     
     try:
-        if not os.path.exists(CSV_FILE):
+        apps = list(tool_context.state.get("applications", [])) if (tool_context and hasattr(tool_context, "state")) else []
+        if not apps:
             return {"status": "error", "message": "No records found."}
             
         data = []
         updated = False
         updated_row = None
         
-        with open(CSV_FILE, "r") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                if str(row["id"]) == str(id):
-                    if company: row["company"] = company
-                    if role: row["role"] = role
-                    if status: row["status"] = status
-                    if date_applied: row["date_applied"] = date_applied
-                    row["last_updated"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    updated_row = row
-                    updated = True
-                data.append(row)
-                
+        for row in apps:
+            row_copy = dict(row)
+            if str(row_copy.get("id")) == str(id):
+                if company: row_copy["company"] = company
+                if role: row_copy["role"] = role
+                if status: row_copy["status"] = status
+                if date_applied: row_copy["date_applied"] = date_applied
+                row_copy["last_updated"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                updated_row = row_copy
+                updated = True
+            data.append(row_copy)
+            
         if not updated:
             return {"status": "error", "message": f"Record #{id} not found."}
             
-        with open(CSV_FILE, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
-            writer.writeheader()
-            writer.writerows(data)
+        if tool_context and hasattr(tool_context, "state"):
+            tool_context.state["applications"] = data
             
-        audit_log(agent_name, tool_name, "SUCCESS", f"Updated record #{id}.")
+        audit_log(agent_name, tool_name, "SUCCESS")
         return {"status": "success", "message": "Record updated.", "record": updated_row}
     except Exception as e:
-        error_msg = f"Failed to update CSV: {str(e)}"
+        error_msg = f"Failed to update application: {str(e)}"
         audit_log(agent_name, tool_name, "FAILURE", error_msg)
         return {"status": "error", "message": error_msg}
+

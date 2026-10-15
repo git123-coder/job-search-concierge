@@ -116,10 +116,10 @@ job-search-concierge
  │     └── tools.py
  │
  ├── app.py
- ├── applications.csv
  ├── audit.log
  ├── README.md
  ├── regression_tests.py
+ ├── test_session_storage.py
  └── requirements.txt
  
 ```
@@ -294,8 +294,8 @@ python3 regression_tests.py
 
 # Data Storage
 
-* applications.csv
-* audit.log
+* In-memory session state (`ToolContext.state["applications"]`), isolated per user/session for Streamlit Community Cloud deployability
+* audit.log (shared operation logs, strictly operational without user data leakage)
 
 ---
 

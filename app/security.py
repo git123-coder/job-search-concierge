@@ -13,8 +13,8 @@ def validate_application(company: str, role: str, status: str, date_applied: str
             return "Date must be a valid YYYY-MM-DD string."
     return None
 
-def audit_log(agent_name: str, tool_name: str, status: str, message: str):
+def audit_log(agent_name: str, tool_name: str, status: str, message: str = ""):
     timestamp = datetime.datetime.now().isoformat()
-    log_line = f"{timestamp} | {agent_name} | {tool_name} | {status} | {message}\n"
+    log_line = f"{timestamp} | {agent_name} | {tool_name} | {status}\n"
     with open(AUDIT_LOG_FILE, "a") as f:
         f.write(log_line)

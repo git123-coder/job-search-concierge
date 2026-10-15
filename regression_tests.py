@@ -1,5 +1,10 @@
+import os
 import asyncio
 import warnings
+from dotenv import load_dotenv
+
+load_dotenv()
+
 warnings.filterwarnings( "ignore", message=".*JSON_SCHEMA_FOR_FUNC_DECL.*", 
 category=UserWarning, module="google.adk.tools.function_tool" )
 
@@ -41,12 +46,18 @@ async def main():
         if response:
             print(f"Agent: {response}")
             
-    print("\n--- applications.csv ---")
-    try:
-        with open("applications.csv", "r") as f:
-            print(f.read())
-    except FileNotFoundError:
-        print("Not found.")
+    print("\n--- In-Memory Session Applications ---")
+    session_data = await engine.runner.session_service.get_session(
+        app_name="job-search-concierge", user_id="test_user", session_id=session.id
+    )
+    if session_data:
+        print(session_data.state.get("applications", []))
+
+    print("\n--- applications.csv Check ---")
+    if os.path.exists("applications.csv"):
+        print("WARNING: applications.csv was created!")
+    else:
+        print("Confirmed: applications.csv does NOT exist (session-only storage in use).")
 
     print("\n--- audit.log ---")
     try:
@@ -56,4 +67,14 @@ async def main():
         print("Not found.")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    if not os.environ.get("GEMINI_API_KEY"):
+        print("Note: GEMINI_API_KEY is not set in environment.")
+        print("Running in-memory session storage test suite (test_session_storage.py)...")
+        import unittest
+        suite = unittest.defaultTestLoader.loadTestsFromName("test_session_storage")
+        runner = unittest.TextTestRunner(verbosity=2)
+        runner.run(suite)
+    else:
+        asyncio.run(main())
+
+

@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from google.adk.apps import App
 from google.adk.runners import InMemoryRunner
 from google.genai import types
@@ -9,7 +10,9 @@ class JobSearchEngine:
         self.app = App(name="job-search-concierge", root_agent=root_agent)
         self.runner = InMemoryRunner(app=self.app)
 
-    async def create_session(self, user_id="test_user"):
+    async def create_session(self, user_id=None):
+        if not user_id:
+            user_id = f"user_{uuid.uuid4()}"
         session = await self.runner.session_service.create_session(
             app_name="job-search-concierge", user_id=user_id
         )

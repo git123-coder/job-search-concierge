@@ -1,6 +1,9 @@
 import streamlit as st
 import asyncio
+import uuid
 from app.engine import JobSearchEngine
+from dotenv import load_dotenv
+load_dotenv()
 
 st.set_page_config(page_title="Job Search Concierge", layout="centered")
 
@@ -8,11 +11,14 @@ st.set_page_config(page_title="Job Search Concierge", layout="centered")
 if "engine" not in st.session_state:
     st.session_state.engine = JobSearchEngine()
 
+if "user_id" not in st.session_state:
+    st.session_state.user_id = f"user_{uuid.uuid4()}"
+
 if "session_id" not in st.session_state:
     # Run async function to create session
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    session = loop.run_until_complete(st.session_state.engine.create_session("streamlit_user"))
+    session = loop.run_until_complete(st.session_state.engine.create_session(st.session_state.user_id))
     st.session_state.session_id = session.id
     st.session_state.messages = []
 
@@ -37,8 +43,9 @@ if prompt := st.chat_input("Message Job Search Concierge..."):
                 st.session_state.engine.process_message(
                     prompt, 
                     st.session_state.session_id, 
-                    user_id="streamlit_user"
+                    user_id=st.session_state.user_id
                 )
             )
             st.markdown(response_text)
             st.session_state.messages.append({"role": "assistant", "content": response_text})
+
