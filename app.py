@@ -7,6 +7,11 @@ load_dotenv()
 
 st.set_page_config(page_title="Job Search Concierge", layout="centered")
 
+st.markdown(
+    "<style>#MainMenu {visibility:hidden;}</style>",
+    unsafe_allow_html=True
+)
+
 # Initialize engine and session
 if "engine" not in st.session_state:
     st.session_state.engine = JobSearchEngine()
