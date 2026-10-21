@@ -2,16 +2,13 @@ import os
 import asyncio
 import warnings
 from dotenv import load_dotenv
-
 load_dotenv()
-
 warnings.filterwarnings( "ignore", message=".*JSON_SCHEMA_FOR_FUNC_DECL.*", 
 category=UserWarning, module="google.adk.tools.function_tool" )
-
 from app.engine import JobSearchEngine
-
 async def main():
-    engine = JobSearchEngine()
+    api_key = os.environ.get("GEMINI_API_KEY")
+    engine = JobSearchEngine(api_key=api_key)
     session = await engine.create_session(user_id="test_user")
     
     print("Running end-to-end test...")
@@ -39,7 +36,6 @@ async def main():
         "What should I follow up on?",
         "How is my job search going?"
     ]
-    
     for user_input in requests:
         print(f"\nUser: {user_input}")
         response = await engine.process_message(user_input, session.id, user_id="test_user")
@@ -52,29 +48,28 @@ async def main():
     )
     if session_data:
         print(session_data.state.get("applications", []))
-
     print("\n--- applications.csv Check ---")
     if os.path.exists("applications.csv"):
         print("WARNING: applications.csv was created!")
     else:
         print("Confirmed: applications.csv does NOT exist (session-only storage in use).")
-
     print("\n--- audit.log ---")
     try:
         with open("audit.log", "r") as f:
             print(f.read())
     except FileNotFoundError:
         print("Not found.")
-
 if __name__ == "__main__":
     if not os.environ.get("GEMINI_API_KEY"):
         print("Note: GEMINI_API_KEY is not set in environment.")
-        print("Running in-memory session storage test suite (test_session_storage.py)...")
+        print("Running in-memory session storage and BYOK test suites...")
         import unittest
-        suite = unittest.defaultTestLoader.loadTestsFromName("test_session_storage")
+        loader = unittest.defaultTestLoader
+        suite = unittest.TestSuite([
+            loader.loadTestsFromName("test_session_storage"),
+            loader.loadTestsFromName("test_byok"),
+        ])
         runner = unittest.TextTestRunner(verbosity=2)
         runner.run(suite)
     else:
         asyncio.run(main())
-
-
